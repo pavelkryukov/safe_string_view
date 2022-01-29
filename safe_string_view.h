@@ -26,21 +26,22 @@
 #include <cstring>
 #include <string_view>
 
-// Looks like a libstd++ bug...
-namespace std {
-    using ::strnlen_s;   
-} // namespace std
-
 #if defined(__STDC_WANT_LIB_EXT1__) and __STDC_WANT_LIB_EXT1__ == 1
 /**
- * Returns true if view.data() is a valid null-terminated C string
- * Behavior is undefined if view.data() is not a pointer to allocated data
- *
- * TODO: check if view.data() + view.length() is a valid pointer
+ * Returns true if 'strlen(view.data()) == view.length()'
+ * Behavior is undefined if 'view' is not a valid std::string_view:
+ *  - points to not-allocated data
+ *  - points to a memory chunk _less_ than view.length()
  */
 inline bool is_safe_string_view(std::string_view view)
 {
-    return std::strnlen_s(view.data(), view.length() + 1) == view.length();
+    if (std::find(view.begin(), view.end(), '\0') != view.end())
+        return false;
+
+    const auto* ptr = view.data() + view.length();
+
+    // TODO: check if view.data() + view.length() is a dereferencable pointer
+    return *ptr == '\0';
 }
 
 #endif // defined(__STDC_WANT_LIB_EXT1__) and __STDC_WANT_LIB_EXT1__ == 1
