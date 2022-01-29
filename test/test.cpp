@@ -20,11 +20,12 @@
  * SOFTWARE.
  */
 
-#define __STDC_WANT_LIB_EXT1__ 1
-#define strnlen_s strnlen
-
 #include "catch.hpp"
 #include "../safe_string_view.h"
+
+#include <iostream>
+
+#include <malloc.h>
 
 #define ASSERT(arg) CHECK(is_safe_string_view(arg))
 #define ASSERT_FALSE(arg) CHECK_FALSE(is_safe_string_view(arg))
@@ -77,4 +78,18 @@ TEST_CASE("array")
 
     // This is true because strlen captures 'garbage' variable
     ASSERT(std::string_view(example.array));
+}
+
+static constexpr size_t PAGE_4K = 4 * 1024;
+
+TEST_CASE("outside page")
+{
+    struct Aligned {
+        std::array<char, PAGE_4K> array;
+    };
+
+    auto aligned = std::make_unique<Aligned>();
+    std::fill(aligned->array.begin(), aligned->array.end(), 'f');
+
+    ASSERT_FALSE(std::string_view(aligned->array.data(), aligned->array.size()));
 }

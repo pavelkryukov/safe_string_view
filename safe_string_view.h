@@ -26,7 +26,6 @@
 #include <cstring>
 #include <string_view>
 
-#if defined(__STDC_WANT_LIB_EXT1__) and __STDC_WANT_LIB_EXT1__ == 1
 /**
  * Returns true if 'strlen(view.data()) == view.length()'
  * Behavior is undefined if 'view' is not a valid std::string_view:
@@ -43,7 +42,5 @@ inline bool is_safe_string_view(std::string_view view)
     // TODO: check if view.data() + view.length() is a dereferencable pointer
     return *ptr == '\0';
 }
-
-#endif // defined(__STDC_WANT_LIB_EXT1__) and __STDC_WANT_LIB_EXT1__ == 1
 
 #endif // SAFE_STRING_VIEW
