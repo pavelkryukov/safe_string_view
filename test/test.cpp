@@ -26,11 +26,55 @@
 #include "catch.hpp"
 #include "../safe_string_view.h"
 
+#define ASSERT(arg) CHECK(is_safe_string_view(arg))
+#define ASSERT_FALSE(arg) CHECK_FALSE(is_safe_string_view(arg))
+
 TEST_CASE("Literal")
 {
     const char* literal = "Literal";
 
-    CHECK(is_safe_string_view(std::string_view(literal)));
-    CHECK_FALSE(is_safe_string_view(std::string_view(literal, 5)));
-    CHECK_FALSE(is_safe_string_view(std::string_view(literal, 15)));
+    ASSERT(std::string_view(literal));
+    ASSERT_FALSE(std::string_view(literal, 5));
+    ASSERT_FALSE(std::string_view(literal, 15));
+}
+
+TEST_CASE("std::string")
+{
+    const std::string string("String");
+    const std::string_view view(string);
+
+    ASSERT(std::string{});
+    ASSERT(view);
+    ASSERT_FALSE(view.substr(0, 5));
+}
+
+TEST_CASE("suffix")
+{
+    std::string_view view("suffixed");
+    view.remove_suffix(4);
+
+    ASSERT_FALSE(view);
+}
+
+TEST_CASE("prefix")
+{
+    std::string_view view("prefixed");
+    view.remove_prefix(4);
+
+    ASSERT(view);
+}
+
+TEST_CASE("array")
+{
+    struct Example {
+        const char array[8] = {'a', 'r', 'r', 'a', 'a', 'r', 'r', 'a'};
+        int garbage    = -1;
+        int terminator = 0;
+    } example;
+    static_assert(sizeof(Example) == 8 * sizeof(char) + 2 * sizeof(int));
+
+    ASSERT_FALSE(std::string_view(example.array, sizeof example.array));
+
+    // This is true because strlen captures 'garbage' variable
+    ASSERT(std::string_view(example.array));
 }
