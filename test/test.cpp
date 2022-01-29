@@ -65,7 +65,7 @@ TEST_CASE("prefix")
     ASSERT(view);
 }
 
-TEST_CASE("array")
+TEST_CASE("stack")
 {
     struct Example {
         const char array[8] = {'a', 'r', 'r', 'a', 'a', 'r', 'r', 'a'};
@@ -80,16 +80,28 @@ TEST_CASE("array")
     ASSERT(std::string_view(example.array));
 }
 
-static constexpr size_t PAGE_4K = 4 * 1024;
-
-TEST_CASE("outside page")
+TEST_CASE("heap")
 {
-    struct Aligned {
-        std::array<char, PAGE_4K> array;
-    };
+    static constexpr size_t SIZE = 4 * 1024;
 
-    auto aligned = std::make_unique<Aligned>();
-    std::fill(aligned->array.begin(), aligned->array.end(), 'f');
+    auto aligned = std::make_unique<std::array<char, SIZE>>();
+    std::fill(aligned->begin(), aligned->end(), 'f');
 
-    ASSERT_FALSE(std::string_view(aligned->array.data(), aligned->array.size()));
+    volatile char* ptr = aligned->end();
+    *ptr = 'f';
+
+    ASSERT_FALSE(std::string_view(aligned->data(), aligned->size()));
+}
+
+TEST_CASE("heap_terminated")
+{
+    static constexpr size_t SIZE = 4 * 1024;
+
+    auto aligned = std::make_unique<std::array<char, SIZE>>();
+    std::fill(aligned->begin(), aligned->end(), 'f');
+
+    volatile char* ptr = aligned->end();
+    *ptr = '\0';
+
+    ASSERT(std::string_view(aligned->data(), aligned->size()));
 }

@@ -37,7 +37,7 @@ inline bool is_safe_string_view(std::string_view view)
     if (std::find(view.begin(), view.end(), '\0') != view.end())
         return false;
 
-    const auto* ptr = view.data() + view.length();
+    const volatile auto* ptr = view.data() + view.length();
 
     // TODO: check if view.data() + view.length() is a dereferencable pointer
     return *ptr == '\0';
